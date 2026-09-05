@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=70.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vidwise-rag-service"
+version = "0.1.0"
+description = "RAG service for the Vidwise YouTube AI learning platform"
+readme = "README.md"
+requires-python = ">=3.11,<3.15"
+dependencies = [ 
+    # LangChain
+    "langchain>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langchain-core>=0.3.0",
+    # YouTube
+    "youtube-transcript-api>=1.0.0",
+    ]
