@@ -1,1 +1,1 @@
-from .loader import ytloader
+from .loader import YTLoader
