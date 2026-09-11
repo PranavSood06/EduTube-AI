@@ -1,11 +1,19 @@
-class Splitter:
-    def __init__(self,text_splitter,chunk_size:int,chunk_overlap:int):
-        self.text_splitter = text_splitter
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-    def split(self,docs):
-        self.split = self.text_splitter(chunk_size = self.chunk_size , chunk_overlap = self.chunk_overlap)
-        self.chunks = self.split.split_documents(docs)
+class Splitter:
+    def __init__(self):
+        self.chunk_size = 6000
+        self.chunk_overlap = 2000
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self.chunk_size,
+            chunk_overlap=self.chunk_overlap
+        )
+
+    def split_text(self,text):
+        self.chunks = self.text_splitter.split_text(text)
+        return self.chunks
+    
+    def split_documents(self,docs):
+        self.chunks = self.text_splitter.split_documents(docs)
         return self.chunks
 
