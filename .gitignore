@@ -1,18 +1,88 @@
-# Environment files can contain deployment credentials. Commit the .example files instead.
+# =========================
+# Python
+# =========================
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# =========================
+# Environment / Secrets
+# =========================
+
 .env
 .env.*
 !.env.example
 
-# Local dependencies and generated files
-node_modules/
+# =========================
+# IDE / Editor
+# =========================
+
+.vscode/
+.idea/
+
+# =========================
+# Jupyter
+# =========================
+
+.ipynb_checkpoints/
+
+# =========================
+# Build / Packaging
+# =========================
+
+build/
 dist/
-__pycache__/
-*.py[cod]
+*.egg-info/
+
+# =========================
+# ChromaDB
+# =========================
+
+backend/app/data/chroma/
+backend/test
+
+# =========================
+# Logs
+# =========================
+
+*.log
+logs/
+
+# =========================
+# OS generated files
+# =========================
+
+.DS_Store
+Thumbs.db
+
+# =========================
+# Testing / Coverage
+# =========================
+
 .pytest_cache/
-.venv/
-venv/
+.coverage
+htmlcov/
 
+# =========================
+# Ruff / Mypy
+# =========================
+
+.mypy_cache/
+.ruff_cache/
+
+# =========================
+# Temporary files
+# =========================
+
+*.tmp
+*.temp
+*.swp
+*.swo
 plan.md
-structure.txt
-chroma/
-

@@ -1,0 +1,74 @@
+backend/
+│
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   │
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── routes/
+│   │       ├── __init__.py
+│   │       ├── chat.py
+│   │       ├── videos.py
+│   │       ├── notes.py
+│   │       ├── quiz.py
+│   │       └── health.py
+│   │
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── chat.py
+│   │   ├── video.py
+│   │   ├── note.py
+│   │   └── quiz.py
+│   │
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── rag/
+│   │   │   ├── __init__.py
+│   │   │   ├── pipeline.py
+│   │   │   ├── retriever.py
+│   │   │   ├── embeddings.py
+│   │   │   ├── prompt.py
+│   │   │   └── generator.py
+│   │   │
+│   │   ├── youtube/
+│   │   │   ├── __init__.py
+│   │   │   ├── transcript.py
+│   │   │   └── video_service.py
+│   │   │
+│   │   ├── quiz_service.py
+│   │   ├── notes_service.py
+│   │   └── chat_service.py
+│   │
+│   ├── database/
+│   │   ├── __init__.py
+│   │   ├── connection.py
+│   │   ├── models.py
+│   │   └── repositories/
+│   │       ├── __init__.py
+│   │       └── video_repository.py
+│   │
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   └── security.py
+│   │
+│   ├── middleware/
+│   │   ├── __init__.py
+│   │   └── logging.py
+│   │
+│   └── utils/
+│       ├── __init__.py
+│       └── text.py
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_chat.py
+│   ├── test_videos.py
+│   └── test_rag.py
+│
+├── .env
+├── .env.example
+├── .gitignore
+├── pyproject.toml
+└── README.md
