@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=70.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Edutube-AI"
+version = "0.1.0"
+description = "PERFECT WEAPON TO ESCAPE TUTORIAL HELL"
+readme = "README.md"
+requires-python = ">=3.11,<3.15"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "python-dotenv>=1.0.0",
+    # LangChain
+    "langchain>=0.3.0",
+    "langchain-community>=0.3.0",
+    "langchain-core>=0.3.0",
+    "pytest",
+    # YouTube
+    "youtube-transcript-api>=1.0.0",
+    #supadata
+    "supadata",
+    "langchain-google-genai",
+    "google-generativeai",
+    "langchain-huggingface",
+    "transformers",
+    "huggingface-hub",
+    "chromadb>=1.5.9",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
