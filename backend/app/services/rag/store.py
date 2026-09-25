@@ -22,7 +22,7 @@ class VectorStore:
         )
 
         self.embedding_model = GoogleGenerativeAIEmbeddings(
-            model="models/gemini-embedding-001"
+            model="models/gemini-embedding-2"
         )
 
     def create_new_collection(self, name: str):
@@ -34,7 +34,7 @@ class VectorStore:
 
         return collection
 
-    def embed_docs(self, documents: List[Document]):
+    async def embed_docs(self, documents: List[Document]):
         logger.info(
             "Generating embeddings for %d documents",
             len(documents)
@@ -42,7 +42,7 @@ class VectorStore:
 
         texts = [doc.page_content for doc in documents]
 
-        embeddings = self.embedding_model.embed_documents(texts)
+        embeddings = await self.embedding_model.embed_documents(texts)
 
         return embeddings
 

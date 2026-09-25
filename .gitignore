@@ -1,85 +1,60 @@
-# =========================
-# Python
-# =========================
 
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environments
 .venv/
 venv/
 env/
 ENV/
 
-# =========================
-# Environment / Secrets
-# =========================
 
 .env
 .env.*
 !.env.example
 
-# =========================
-# IDE / Editor
-# =========================
 
 .vscode/
 .idea/
 
-# =========================
-# Jupyter
-# =========================
 
 .ipynb_checkpoints/
-
-# =========================
-# Build / Packaging
-# =========================
 
 build/
 dist/
 *.egg-info/
 
-# =========================
-# ChromaDB
-# =========================
+
 
 backend/app/data/chroma/
-backend/test
+backend/test/*
+!backend/test/conftest.py
+!backend/test/test_chunking.py
+!backend/test/test_pipeline.py
+!backend/test/test_prompt.py
+!backend/test/test_retrieval.py
+!backend/test/test_store.py
 
-# =========================
-# Logs
-# =========================
 
 *.log
 logs/
 
-# =========================
-# OS generated files
-# =========================
 
 .DS_Store
 Thumbs.db
 
-# =========================
-# Testing / Coverage
-# =========================
+
 
 .pytest_cache/
 .coverage
 htmlcov/
 
-# =========================
-# Ruff / Mypy
-# =========================
+
 
 .mypy_cache/
 .ruff_cache/
 
-# =========================
-# Temporary files
-# =========================
+
 
 *.tmp
 *.temp
