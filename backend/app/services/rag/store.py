@@ -46,14 +46,17 @@ class VectorStore:
 
         return embeddings
 
-    def store_in_collection(
+    async def store_in_collection(
         self,
         chunk_docs: List[Document],
         name: str
     ):
         collection = self.create_new_collection(name)
 
-        embeddings = self.embed_docs(chunk_docs)
+        # ``embed_docs`` is asynchronous.  Passing its coroutine directly to
+        # Chroma leaves an un-awaited coroutine in the response/data path,
+        # which FastAPI cannot serialize.
+        embeddings = await self.embed_docs(chunk_docs)
 
         ids = [
             doc.metadata["chunk_id"]
@@ -70,7 +73,7 @@ class VectorStore:
             for doc in chunk_docs
         ]
 
-        collection.add(
+        collection.upsert(
             ids=ids,
             documents=documents,
             embeddings=embeddings,

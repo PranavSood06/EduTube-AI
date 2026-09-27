@@ -1,4 +1,5 @@
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
@@ -20,21 +21,22 @@ class FakeCollection:
         }
 
 
-class FakeClient:
-    def get_collection(self, name):
+class FakeVectorStore:
+    embedding_model = FakeEmbeddingModel()
+
+    async def get_collection(self, name):
         assert name == "video"
         return FakeCollection()
 
 
-class FakeVectorStore:
-    client = FakeClient()
-    embedding_model = FakeEmbeddingModel()
-
-
 def test_retrieve_returns_langchain_documents():
-    documents = asyncio.run(
-        Retrieval(FakeVectorStore()).retrieve("What is inertia?", "video", k=2)
-    )
+    async def run_synchronously(function, *args, **kwargs):
+        return function(*args, **kwargs)
+
+    with patch("app.services.rag.retrieval.asyncio.to_thread", new=run_synchronously):
+        documents = asyncio.run(
+            Retrieval(FakeVectorStore()).retrieve("What is inertia?", "video", k=2)
+        )
 
     assert len(documents) == 1
     assert documents[0].page_content == "Inertia resists changes in motion."

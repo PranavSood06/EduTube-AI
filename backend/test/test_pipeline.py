@@ -33,13 +33,14 @@ class FakeVectorStore:
     def __init__(self, collection=None):
         self.client = FakeClient(collection)
         self.collection = collection or FakeCollection()
-        self.embedded_documents = None
+        self.stored_documents = None
 
-    async def embed_docs(self, documents):
-        self.embedded_documents = documents
-        return [[0.5] for _ in documents]
+    async def store_in_collection(self, documents, name):
+        assert name == "video-123"
+        self.stored_documents = documents
+        return len(documents)
 
-    def create_new_collection(self, name):
+    async def get_collection(self, name):
         assert name == "video-123"
         return self.collection
 
@@ -67,8 +68,7 @@ def test_index_video_fetches_chunks_embeds_and_upserts():
         indexed_count = asyncio.run(pipeline.index_video("video-123"))
 
     assert indexed_count == 2
-    assert [document.page_content for document in vector_store.embedded_documents] == chunks
-    assert vector_store.collection.upsert_calls[0]["ids"] == ["video-123_0", "video-123_1"]
+    assert [document.page_content for document in vector_store.stored_documents] == chunks
 
 
 def test_rag_pipeline_retrieves_context_and_generates_answer():
@@ -90,7 +90,13 @@ def test_rag_pipeline_retrieves_context_and_generates_answer():
         assert "What does the video explain?" in prompt_text
         return "Grounded answer"
 
-    with patch.object(Pipeline, "generate_answer", new=staticmethod(answer)):
+    async def run_synchronously(function, *args, **kwargs):
+        return function(*args, **kwargs)
+
+    with (
+        patch.object(Pipeline, "generate_answer", new=staticmethod(answer)),
+        patch("app.services.rag.pipeline.asyncio.to_thread", new=run_synchronously),
+    ):
         result = asyncio.run(
             pipeline.rag_pipeline("video-123", "What does the video explain?", k=1)
         )

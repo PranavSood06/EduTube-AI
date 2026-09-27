@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from .store import VectorStore
 from langchain_core.documents import Document
@@ -21,13 +22,12 @@ class Retrieval:
             k
         )
         try:
-            collection = self.vectorstore.client.get_collection(
-                name=collection_name
-            )
+            collection = await self.vectorstore.get_collection(collection_name)
             query_embedding = await self.vectorstore.embedding_model.aembed_query(
                 query
             )
-            results = collection.query(
+            results = await asyncio.to_thread(
+                collection.query,
                 query_embeddings=[query_embedding],
                 n_results=k
             )

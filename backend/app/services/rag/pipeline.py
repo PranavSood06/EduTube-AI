@@ -10,6 +10,9 @@ from .chunking import Splitters
 from .prompt import prompts
 from .retrieval import Retrieval
 from .store import VectorStore
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,6 @@ class Pipeline:
             content = answer.content
             return content if isinstance(content, str) else str(content)
         except Exception:
-            logger.exception("Error in generating the response")
             logger.exception("Error generating RAG response")
             raise
 
@@ -55,16 +57,9 @@ class Pipeline:
             raise ValueError(f"Transcript for video '{video_id}' contains no text")
 
         documents = Splitters.chunkstodocs(chunks, video_id)
-        embeddings = await self.vector_store.embed_docs(documents)
-        collection = self.vector_store.create_new_collection(video_id)
-        collection.upsert(
-            ids=[document.metadata["chunk_id"] for document in documents],
-            documents=[document.page_content for document in documents],
-            embeddings=embeddings,
-            metadatas=[document.metadata for document in documents],
-        )
-        logger.info("Indexed %d chunks for video '%s'", len(documents), video_id)
-        return len(documents)
+        indexed_count = await self.vector_store.store_in_collection(documents, video_id)
+        logger.info("Indexed %d chunks for video '%s'", indexed_count, video_id)
+        return indexed_count
 
     async def rag_pipeline(self, video_id: str, question: str, *, k: int = 5) -> str:
         """Answer *question* using the transcript associated with *video_id*."""
@@ -75,8 +70,8 @@ class Pipeline:
 
         video_id = video_id.strip()
         try:
-            collection = self.vector_store.client.get_collection(name=video_id)
-            indexed = collection.count() > 0
+            collection = await self.vector_store.get_collection(video_id)
+            indexed = await asyncio.to_thread(collection.count) > 0
         except Exception:
             indexed = False
 
