@@ -21,6 +21,7 @@ class Retrieval:
             "Retrieval started for %d documents",
             k
         )
+        
         try:
             collection = await self.vectorstore.get_collection(collection_name)
             query_embedding = await self.vectorstore.embedding_model.aembed_query(

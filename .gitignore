@@ -8,6 +8,14 @@ venv/
 env/
 ENV/
 
+# Frontend (Node/Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/coverage/
+frontend/*.local
+
 
 .env
 .env.*
@@ -30,6 +38,7 @@ backend/app/data/chroma/
 backend/test/*
 !backend/test/conftest.py
 !backend/test/test_chunking.py
+!backend/test/test_embedding_model.ipynb
 !backend/test/test_pipeline.py
 !backend/test/test_prompt.py
 !backend/test/test_retrieval.py

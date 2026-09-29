@@ -1,11 +1,13 @@
+import asyncio
 import logging
 from pathlib import Path
-from typing import List
+from typing import Sequence
 
 import chromadb
 from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_voyageai import VoyageAIEmbeddings
 
 load_dotenv()
 
@@ -21,20 +23,17 @@ class VectorStore:
             path=str(base_dir / "data" / "chroma")
         )
 
-        self.embedding_model = GoogleGenerativeAIEmbeddings(
-            model="models/gemini-embedding-2"
+        self.embedding_model = VoyageAIEmbeddings(
+            model="voyage-4"
         )
 
-    def create_new_collection(self, name: str):
+    async def create_new_collection(self, name: str):
         logger.info("Creating new collection: %s", name)
-
-        collection = self.client.get_or_create_collection(
-            name=name
+        return await asyncio.to_thread(
+            self.client.get_or_create_collection, name=name
         )
 
-        return collection
-
-    async def embed_docs(self, documents: List[Document]):
+    async def embed_docs(self, documents: Sequence[Document]) -> list[list[float]]:
         logger.info(
             "Generating embeddings for %d documents",
             len(documents)
@@ -42,20 +41,16 @@ class VectorStore:
 
         texts = [doc.page_content for doc in documents]
 
-        embeddings = await self.embedding_model.embed_documents(texts)
-
-        return embeddings
+        return await self.embedding_model.aembed_documents(texts)
 
     async def store_in_collection(
         self,
-        chunk_docs: List[Document],
+        chunk_docs: Sequence[Document],
         name: str
-    ):
-        collection = self.create_new_collection(name)
+    ) -> int:
+        """Embed and upsert documents without blocking the event loop."""
+        collection = await self.create_new_collection(name)
 
-        # ``embed_docs`` is asynchronous.  Passing its coroutine directly to
-        # Chroma leaves an un-awaited coroutine in the response/data path,
-        # which FastAPI cannot serialize.
         embeddings = await self.embed_docs(chunk_docs)
 
         ids = [
@@ -73,7 +68,8 @@ class VectorStore:
             for doc in chunk_docs
         ]
 
-        collection.upsert(
+        await asyncio.to_thread(
+            collection.upsert,
             ids=ids,
             documents=documents,
             embeddings=embeddings,
@@ -85,3 +81,8 @@ class VectorStore:
             len(chunk_docs),
             name
         )
+        return len(chunk_docs)
+
+    async def get_collection(self, name: str):
+        """Fetch a Chroma collection without blocking the event loop."""
+        return await asyncio.to_thread(self.client.get_collection, name=name)
