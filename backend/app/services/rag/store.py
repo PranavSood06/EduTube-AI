@@ -1,13 +1,13 @@
 import asyncio
 import logging
-from pathlib import Path
+import os
 from typing import Sequence
 
 import chromadb
 from dotenv import load_dotenv
 from langchain_core.documents import Document
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_voyageai import VoyageAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 load_dotenv()
 
@@ -17,21 +17,34 @@ logger = logging.getLogger(__name__)
 class VectorStore:
 
     def __init__(self):
-        base_dir = Path(__file__).resolve().parent.parent.parent
+        api_key = os.getenv("CHROMA_API_KEY")
+        tenant = os.getenv("CHROMA_TENANT")
+        database = os.getenv("CHROMA_DATABASE")
 
-        self.client = chromadb.PersistentClient(
-            path=str(base_dir / "data" / "chroma")
+        if not api_key or not tenant:
+            raise RuntimeError(
+                "CHROMA_API_KEY and CHROMA_TENANT must be configured for Chroma Cloud"
+            )
+
+        self.client = chromadb.CloudClient(
+            api_key=api_key,
+            tenant=tenant,
+            database=database,
         )
 
-        self.embedding_model = VoyageAIEmbeddings(
-            model="voyage-4"
+        self.embedding_model = GoogleGenerativeAIEmbeddings(
+            model="gemini-embedding-2"
         )
 
-    async def create_new_collection(self, name: str):
-        logger.info("Creating new collection: %s", name)
+    async def get_or_create_collection(self, name: str):
+        """Get a cloud collection, creating it only for a newly indexed video."""
+        logger.info("Getting or creating cloud collection: %s", name)
         return await asyncio.to_thread(
             self.client.get_or_create_collection, name=name
         )
+
+    # Retained for callers that still use the older method name.
+    create_new_collection = get_or_create_collection
 
     async def embed_docs(self, documents: Sequence[Document]) -> list[list[float]]:
         logger.info(
@@ -49,7 +62,7 @@ class VectorStore:
         name: str
     ) -> int:
         """Embed and upsert documents without blocking the event loop."""
-        collection = await self.create_new_collection(name)
+        collection = await self.get_or_create_collection(name)
 
         embeddings = await self.embed_docs(chunk_docs)
 

@@ -5,15 +5,15 @@ class Splitters:
     @staticmethod
     def RecursiveSplitter(transcript:List[Document]):
         Content = transcript[0].page_content
-        x = 5000
-        while True:
-            Splitter = RecursiveCharacterTextSplitter(
-                chunk_size = x,
-                chunk_overlap = 500
-            )
-            chunks = Splitter.split_text(Content)
-            if(len(chunks)<=20): break 
-            x += 5000
+        # x = 100
+        # while True:
+        Splitter = RecursiveCharacterTextSplitter(
+            chunk_size = 500,
+            chunk_overlap = 50
+        )
+        chunks = Splitter.split_text(Content)
+        # if(len(chunks)<=50): break 
+            # x += 100
         return chunks
 
     def chunkstodocs(chunks: List[str],video_id: str) -> List[Document]:
