@@ -15,7 +15,6 @@ export default function Health() {
         setError("Unable to reach the API.");
       }
     }
-
     fetchHealth();
   }, []);
 

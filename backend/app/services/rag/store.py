@@ -46,15 +46,47 @@ class VectorStore:
     # Retained for callers that still use the older method name.
     create_new_collection = get_or_create_collection
 
-    async def embed_docs(self, documents: Sequence[Document]) -> list[list[float]]:
+    async def embed_docs(
+        self,
+        documents: Sequence[Document],
+        batch_size: int = 90,
+        wait_seconds: int = 65,
+    ) -> list[list[float]]:
         logger.info(
-            "Generating embeddings for %d documents",
-            len(documents)
+            "Generating embeddings for %d documents in batches of %d",
+            len(documents),
+            batch_size,
         )
 
         texts = [doc.page_content for doc in documents]
 
-        return await self.embedding_model.aembed_documents(texts)
+        all_embeddings: list[list[float]] = []
+
+        for start in range(0, len(texts), batch_size):
+            batch = texts[start:start + batch_size]
+            batch_number = (start // batch_size) + 1
+            total_batches = (len(texts) + batch_size - 1) // batch_size
+
+            logger.info(
+                "Embedding batch %d/%d (%d texts)",
+                batch_number,
+                total_batches,
+                len(batch),
+            )
+
+            embeddings = await self.embedding_model.aembed_documents(batch)
+
+            all_embeddings.extend(embeddings)
+
+            if start + batch_size < len(texts):
+                logger.info(
+                    "Batch %d complete. Waiting %d seconds before next batch...",
+                    batch_number,
+                    wait_seconds,
+                )
+                await asyncio.sleep(wait_seconds)
+
+        return all_embeddings
 
     async def store_in_collection(
         self,
