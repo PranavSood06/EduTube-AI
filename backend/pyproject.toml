@@ -27,6 +27,7 @@ dependencies = [
     "langchain-groq>=1.1.3",
     "langchain-huggingface>=1.2.0",
     "langchain-voyageai>=0.4.1",
+    "langsmith>=0.14.0",
 
     # LangGraph
     "langgraph>=1.2.0",

@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import api from "./axios";
 
 export default function Health() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
+  const [data, setData] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function fetchHealth() {
@@ -32,4 +32,3 @@ export default function Health() {
     </>
   );
 }
-setError("Unable to reach the API.");

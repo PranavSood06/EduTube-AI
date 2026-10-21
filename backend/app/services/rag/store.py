@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_voyageai import VoyageAIEmbeddings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langsmith import trace
+from .observability import RAG_TAGS, add_run_metadata, embedding_inputs, embedding_outputs, trace_async
 
 load_dotenv()
 
@@ -46,6 +48,13 @@ class VectorStore:
     # Retained for callers that still use the older method name.
     create_new_collection = get_or_create_collection
 
+    @trace_async(
+        name="Embed transcript chunks",
+        run_type="embedding",
+        tags=[*RAG_TAGS, "indexing", "embeddings"],
+        process_inputs=embedding_inputs,
+        process_outputs=embedding_outputs,
+    )
     async def embed_docs(
         self,
         documents: Sequence[Document],
@@ -59,6 +68,11 @@ class VectorStore:
         )
 
         texts = [doc.page_content for doc in documents]
+        add_run_metadata(
+            embedding_model="gemini-embedding-2",
+            document_count=len(documents),
+            batch_size=batch_size,
+        )
 
         all_embeddings: list[list[float]] = []
 
@@ -74,7 +88,14 @@ class VectorStore:
                 len(batch),
             )
 
-            embeddings = await self.embedding_model.aembed_documents(batch)
+            with trace(
+                "Embed transcript batch", run_type="embedding",
+                inputs={"batch_number": batch_number, "document_count": len(batch)},
+                tags=[*RAG_TAGS, "indexing", "embeddings"],
+                metadata={"embedding_model": "gemini-embedding-2"},
+            ) as run:
+                embeddings = await self.embedding_model.aembed_documents(batch)
+                run.end(outputs=embedding_outputs(embeddings))
 
             all_embeddings.extend(embeddings)
 
@@ -88,6 +109,12 @@ class VectorStore:
 
         return all_embeddings
 
+    @trace_async(
+        name="Upsert transcript chunks",
+        run_type="chain",
+        tags=[*RAG_TAGS, "indexing", "vector-store"],
+        process_inputs=embedding_inputs,
+    )
     async def store_in_collection(
         self,
         chunk_docs: Sequence[Document],
@@ -95,6 +122,7 @@ class VectorStore:
     ) -> int:
         """Embed and upsert documents without blocking the event loop."""
         collection = await self.get_or_create_collection(name)
+        add_run_metadata(video_id=name, collection_name=name, chunk_count=len(chunk_docs))
 
         embeddings = await self.embed_docs(chunk_docs)
 
@@ -113,13 +141,19 @@ class VectorStore:
             for doc in chunk_docs
         ]
 
-        await asyncio.to_thread(
-            collection.upsert,
-            ids=ids,
-            documents=documents,
-            embeddings=embeddings,
-            metadatas=metadatas
-        )
+        with trace(
+            "Upsert to Chroma", run_type="tool",
+            inputs={"collection_name": name, "chunk_ids": ids},
+            tags=[*RAG_TAGS, "indexing", "vector-store"],
+        ) as run:
+            await asyncio.to_thread(
+                collection.upsert,
+                ids=ids,
+                documents=documents,
+                embeddings=embeddings,
+                metadatas=metadatas
+            )
+            run.end(outputs={"stored_chunk_count": len(ids)})
 
         logger.info(
             "Stored %d documents in collection '%s'",
